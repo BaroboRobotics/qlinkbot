@@ -31,10 +31,6 @@ QLinkbot::QLinkbot()
       this, SLOT(newAccelValues(double, double, double)),
       Qt::QueuedConnection);
   QMetaObject::invokeMethod(worker_, "doWork", Qt::QueuedConnection); 
-
-  myThread_ = new QThread();
-  this->moveToThread(myThread_);
-  myThread_->start();
 }
 
 int QLinkbot::enableAccelEventCallback()

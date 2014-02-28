@@ -39,7 +39,6 @@ class QBAROBOSHARED_EXPORT QLinkbot : public QObject, public CLinkbot
     QMutex lock_;
     QWaitCondition cond_;
     QThread *workerthread_;
-    QThread *myThread_;
     QLinkbotWorker* worker_;
 };
 
