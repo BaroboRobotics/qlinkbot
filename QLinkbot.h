@@ -20,12 +20,19 @@ class QBAROBOSHARED_EXPORT QLinkbot : public QObject, public CLinkbot
   Q_OBJECT
   public:
     QLinkbot();
+    void connect(const QString &id);
     int enableAccelEventCallback();
     int enableButtonCallback();
     int enableJointEventCallback();
+    QString getSerialID() const {return id_;}
 
     void lock();
     void unlock();
+
+    inline bool operator==(const QLinkbot& other) { 
+      return this->getSerialID() == other.getSerialID();
+    }
+    inline bool operator!=(const QLinkbot& other){return !operator==(other);}
 
   signals:
     void buttonChanged(QLinkbot *linkbot, int button, int event);
@@ -38,6 +45,7 @@ class QBAROBOSHARED_EXPORT QLinkbot : public QObject, public CLinkbot
     void newMotorValues(double j1, double j2, double j3);
 
   private:
+    QString id_;
     QMutex lock_;
     QWaitCondition cond_;
     QThread *workerthread_;

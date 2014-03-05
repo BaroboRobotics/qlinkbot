@@ -52,6 +52,16 @@ int QLinkbot::enableJointEventCallback()
   return CMobot::enableJointEventCallback(worker_, linkbotJointCallback);
 }
 
+void QLinkbot::connect(const QString & id)
+{
+  int rc;
+  rc = connectWithAddress(static_cast<const char*>(id.toLatin1().constData()), 1);
+  if(rc) {
+    throw QString("Could not connect to the following robot: ") + id;
+  }
+  id_ = id;
+}
+
 void QLinkbot::lock()
 {
   lock_.lock();
