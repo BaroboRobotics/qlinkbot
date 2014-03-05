@@ -11,14 +11,14 @@ void linkbotAccelCallback(int , double x, double y, double z, void* worker)
 
 void linkbotButtonCallback(void* linkbot, int button, int buttonDown)
 {
-  QLinkbot* l = (QLinkbot*)linkbot;
-  emit l->buttonChanged(l, button, buttonDown);
+  QLinkbotWorker* l = (QLinkbotWorker*)linkbot;
+  l->setNewButtonValues(button, buttonDown);
 }
 
 void linkbotJointCallback(int , double j1, double j2, double j3, double , void *linkbot)
 {
-  QLinkbot* l = (QLinkbot*)linkbot;
-  emit l->motorChanged(l, j1, j2, j3);
+  QLinkbotWorker* l = (QLinkbotWorker*)linkbot;
+  l->setNewMotorValues(j1, j2, j3);
 }
 
 QLinkbot::QLinkbot()
@@ -30,6 +30,10 @@ QLinkbot::QLinkbot()
   QObject::connect(worker_, SIGNAL(accelChanged(double, double, double)),
       this, SLOT(newAccelValues(double, double, double)),
       Qt::QueuedConnection);
+  QObject::connect(worker_, SIGNAL(buttonChanged(int, int)),
+      this, SLOT(newButtonValues(int, int)));
+  QObject::connect(worker_, SIGNAL(motorChanged(double, double, double)),
+      this, SLOT(newMotorValues(double, double, double)));
   QMetaObject::invokeMethod(worker_, "doWork", Qt::QueuedConnection); 
 }
 
@@ -40,12 +44,12 @@ int QLinkbot::enableAccelEventCallback()
 
 int QLinkbot::enableButtonCallback()
 {
-  return CMobot::enableButtonCallback(this, linkbotButtonCallback);
+  return CMobot::enableButtonCallback(worker_, linkbotButtonCallback);
 }
 
 int QLinkbot::enableJointEventCallback()
 {
-  return CMobot::enableJointEventCallback(this, linkbotJointCallback);
+  return CMobot::enableJointEventCallback(worker_, linkbotJointCallback);
 }
 
 void QLinkbot::lock()
@@ -63,6 +67,16 @@ void QLinkbot::newAccelValues(double x, double y, double z)
   emit accelChanged(this, x, y, z);
 }
 
+void QLinkbot::newButtonValues(int button, int buttonDown)
+{
+  emit buttonChanged(this, button, buttonDown);
+}
+
+void QLinkbot::newMotorValues(double j1, double j2, double j3)
+{
+  emit jointChanged(this, j1, j2, j3);
+}
+
 QLinkbotWorker::QLinkbotWorker(QLinkbot* linkbot)
 {
   parentLinkbot_ = linkbot;
@@ -75,7 +89,9 @@ void QLinkbotWorker::doWork()
     lock_.lock();
     while(
         runflag_ &&
-        (accelValuesDirty_ == false)
+        (accelValuesDirty_ == false) &&
+        (buttonValuesDirty_ == false) &&
+        (motorValuesDirty_ == false)
         ) 
     {
       cond_.wait(&lock_);
@@ -83,6 +99,14 @@ void QLinkbotWorker::doWork()
     if(accelValuesDirty_) {
       emit accelChanged(accel_[0], accel_[1], accel_[2]);
       accelValuesDirty_ = false;
+    }
+    if(buttonValuesDirty_) {
+      emit buttonChanged(button_[0], button_[1]);
+      buttonValuesDirty_ = false;
+    }
+    if(motorValuesDirty_) {
+      emit motorChanged(motor_[0], motor_[1], motor_[2]);
+      motorValuesDirty_ = false;
     }
     lock_.unlock();
   }
@@ -95,6 +119,27 @@ void QLinkbotWorker::setNewAccelValues(double x, double y, double z)
   accel_[1] = y;
   accel_[2] = z;
   accelValuesDirty_ = true;
+  cond_.wakeAll();
+  lock_.unlock();
+}
+
+void QLinkbotWorker::setNewButtonValues(int button, int down)
+{
+  lock_.lock();
+  button_[0] = button;
+  button_[1] = down;
+  buttonValuesDirty_ = true;
+  cond_.wakeAll();
+  lock_.unlock();
+}
+
+void QLinkbotWorker::setNewMotorValues(double j1, double j2, double j3)
+{
+  lock_.lock();
+  motor_[0] = j1;
+  motor_[1] = j2;
+  motor_[2] = j3;
+  motorValuesDirty_ = true;
   cond_.wakeAll();
   lock_.unlock();
 }

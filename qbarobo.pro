@@ -6,6 +6,8 @@
 
 QT       -= gui
 
+CONFIG += debug
+
 TARGET = qbarobo
 TEMPLATE = lib
 

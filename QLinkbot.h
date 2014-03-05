@@ -29,11 +29,13 @@ class QBAROBOSHARED_EXPORT QLinkbot : public QObject, public CLinkbot
 
   signals:
     void buttonChanged(QLinkbot *linkbot, int button, int event);
-    void motorChanged(QLinkbot *linkbot, double j1, double j2, double j3);
+    void jointChanged(QLinkbot *linkbot, double j1, double j2, double j3);
     void accelChanged(QLinkbot *linkbot, double x, double y, double z);
 
   public slots:
     void newAccelValues(double x, double y, double z);
+    void newButtonValues(int button, int buttonDown);
+    void newMotorValues(double j1, double j2, double j3);
 
   private:
     QMutex lock_;
@@ -48,12 +50,16 @@ class QLinkbotWorker : public QObject
   public:
     QLinkbotWorker(QLinkbot *linkbot);
     void setNewAccelValues(double x, double y, double z);
+    void setNewButtonValues(int button, int down);
+    void setNewMotorValues(double j1, double j2, double j3);
 
   public slots:
     void doWork();
 
   signals:
     void accelChanged(double x, double y, double z);
+    void buttonChanged(int button, int buttonDown);
+    void motorChanged(double j1, double j2, double j3);
 
   private:
     QLinkbot* parentLinkbot_;
@@ -62,6 +68,10 @@ class QLinkbotWorker : public QObject
     bool runflag_;
     bool accelValuesDirty_;
     double accel_[3];
+    bool buttonValuesDirty_;
+    int button_[2];
+    bool motorValuesDirty_;
+    double motor_[3];
 };
 
 #endif
