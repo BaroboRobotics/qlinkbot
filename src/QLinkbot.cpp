@@ -2,7 +2,6 @@
 #include <iostream>
 #include <QThread>
 #include <QDebug>
-#include "QLinkbot.moc"
 
 void linkbotAccelCallback(int , double x, double y, double z, void* worker)
 {
@@ -155,3 +154,4 @@ void QLinkbotWorker::doWork()
   }
 }
 
+//#include "moc_QLinkbot.cpp"

@@ -43,7 +43,6 @@ if(DEFINED ENV{QTDIR})
 endif()
 find_package(Qt5Core)
 find_package(Qt5Widgets)
-
 ##
 ## Package outputs
 ##
@@ -51,6 +50,7 @@ find_package(Qt5Widgets)
 set(TARGET qlinkbot)
 set(SOURCES
     src/QLinkbot.cpp
+    include/QLinkbot.h
    )
 
 option(BUILD_SHARED_LIBS "build shared libraries" ON)
