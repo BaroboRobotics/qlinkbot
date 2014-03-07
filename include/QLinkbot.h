@@ -11,6 +11,7 @@
 
 class QLinkbot;
 class QLinkbotWorker;
+class CLinkbot;
 void linkbotAccelCallback(int millis, double x, double y, double z, QLinkbot* linkbot);
 void linkbotButtonCallback(CLinkbot* linkbot, int button, int buttonDown);
 void linkbotJointCallback(int millis, double j1, double j2, double j3, double j4, QLinkbot* linkbot);
