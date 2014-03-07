@@ -33,7 +33,6 @@ find_package(Qt5Widgets)
 include_directories(${LIBBAROBO_INCLUDE_DIRS})
 include_directories(${PROJECT_SOURCE_DIR}/include)
 set(SOURCES
-    src/QBaroboBridge.cpp
     src/QLinkbot.cpp
    )
 
