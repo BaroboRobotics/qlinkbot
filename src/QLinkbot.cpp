@@ -2,6 +2,7 @@
 #include <iostream>
 #include <QThread>
 #include <QDebug>
+#include "QLinkbot.moc"
 
 void linkbotAccelCallback(int , double x, double y, double z, void* worker)
 {
@@ -37,6 +38,16 @@ QLinkbot::QLinkbot()
   QMetaObject::invokeMethod(worker_, "doWork", Qt::QueuedConnection); 
 }
 
+void QLinkbot::connect(const QString & id)
+{
+  int rc;
+  rc = connectWithAddress(static_cast<const char*>(id.toLatin1().constData()), 1);
+  if(rc) {
+    throw QString("Could not connect to the following robot: ") + id;
+  }
+  id_ = id;
+}
+
 int QLinkbot::enableAccelEventCallback()
 {
   return CLinkbot::enableAccelEventCallback(worker_, linkbotAccelCallback);
@@ -50,16 +61,6 @@ int QLinkbot::enableButtonCallback()
 int QLinkbot::enableJointEventCallback()
 {
   return CMobot::enableJointEventCallback(worker_, linkbotJointCallback);
-}
-
-void QLinkbot::connect(const QString & id)
-{
-  int rc;
-  rc = connectWithAddress(static_cast<const char*>(id.toLatin1().constData()), 1);
-  if(rc) {
-    throw QString("Could not connect to the following robot: ") + id;
-  }
-  id_ = id;
 }
 
 void QLinkbot::lock()
@@ -93,35 +94,6 @@ QLinkbotWorker::QLinkbotWorker(QLinkbot* linkbot)
   runflag_ = true;
 }
 
-void QLinkbotWorker::doWork()
-{
-  while(runflag_) {
-    lock_.lock();
-    while(
-        runflag_ &&
-        (accelValuesDirty_ == false) &&
-        (buttonValuesDirty_ == false) &&
-        (motorValuesDirty_ == false)
-        ) 
-    {
-      cond_.wait(&lock_);
-    }
-    if(accelValuesDirty_) {
-      emit accelChanged(accel_[0], accel_[1], accel_[2]);
-      accelValuesDirty_ = false;
-    }
-    if(buttonValuesDirty_) {
-      emit buttonChanged(button_[0], button_[1]);
-      buttonValuesDirty_ = false;
-    }
-    if(motorValuesDirty_) {
-      emit motorChanged(motor_[0], motor_[1], motor_[2]);
-      motorValuesDirty_ = false;
-    }
-    lock_.unlock();
-  }
-}
-
 void QLinkbotWorker::setNewAccelValues(double x, double y, double z)
 {
   lock_.lock();
@@ -153,3 +125,33 @@ void QLinkbotWorker::setNewMotorValues(double j1, double j2, double j3)
   cond_.wakeAll();
   lock_.unlock();
 }
+
+void QLinkbotWorker::doWork()
+{
+  while(runflag_) {
+    lock_.lock();
+    while(
+        runflag_ &&
+        (accelValuesDirty_ == false) &&
+        (buttonValuesDirty_ == false) &&
+        (motorValuesDirty_ == false)
+        ) 
+    {
+      cond_.wait(&lock_);
+    }
+    if(accelValuesDirty_) {
+      emit accelChanged(accel_[0], accel_[1], accel_[2]);
+      accelValuesDirty_ = false;
+    }
+    if(buttonValuesDirty_) {
+      emit buttonChanged(button_[0], button_[1]);
+      buttonValuesDirty_ = false;
+    }
+    if(motorValuesDirty_) {
+      emit motorChanged(motor_[0], motor_[1], motor_[2]);
+      motorValuesDirty_ = false;
+    }
+    lock_.unlock();
+  }
+}
+

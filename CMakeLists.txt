@@ -28,6 +28,8 @@ find_package(LIBBAROBO)
 
 include_directories(${LIBBAROBO_INCLUDE_DIRS})
 
+add_definitions(-DQBAROBO_LIBRARY)
+
 set(CMAKE_CXX_FLAGS_DEBUG "-DDEBUG")
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)

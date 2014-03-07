@@ -53,7 +53,7 @@ class QBAROBOSHARED_EXPORT QLinkbot : public QObject, public CLinkbot
     QLinkbotWorker* worker_;
 };
 
-class QLinkbotWorker : public QObject
+class QBAROBOSHARED_EXPORT QLinkbotWorker : public QObject
 {
   Q_OBJECT
   public:

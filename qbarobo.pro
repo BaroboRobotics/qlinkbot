@@ -11,18 +11,15 @@ CONFIG += debug
 TARGET = qbarobo
 TEMPLATE = lib
 
-INCLUDEPATH = ../libbarobo/include
+INCLUDEPATH = ../libbarobo/include include/
 
 LIBS += -L../libbarobo/build -lbarobo
 
 DEFINES += QBAROBO_LIBRARY
 
-SOURCES += QBaroboBridge.cpp\
-           QLinkbot.cpp
+SOURCES += src/QLinkbot.cpp
 
-HEADERS += QBaroboBridge.h\
-        qbarobo_global.h\
-        QLinkbot.h
+HEADERS += include/qbarobo_global.h include/QLinkbot.h
 
 unix:!symbian {
     maemo5 {
