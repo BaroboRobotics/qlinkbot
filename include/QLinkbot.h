@@ -21,11 +21,12 @@ class QBAROBOSHARED_EXPORT QLinkbot : public QObject, public CLinkbot
   Q_OBJECT
   public:
     QLinkbot();
-    void connect(const QString &id);
-    int enableAccelEventCallback();
-    int enableButtonCallback();
-    int enableJointEventCallback();
-    QString getSerialID() const {return id_;}
+    virtual void connectRobot(const QString &id);
+    virtual void disconnectRobot();
+    virtual int enableAccelEventCallback();
+    virtual int enableButtonCallback();
+    virtual int enableJointEventCallback();
+    virtual QString getSerialID() const {return id_;}
 
     void lock();
     void unlock();
