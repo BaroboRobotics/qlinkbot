@@ -19,11 +19,7 @@ include_directories(${PUBLIC_INCLUDE_DIR})
 ##############################################################################
 # Setup
 
-set(required_libbarobo_version 0.1.0)
 add_subdirectory(../libbarobo libbarobo)
-if(NOT LIBBAROBO_VERSION VERSION_EQUAL ${required_libbarobo_version})
-  message(FATAL_ERROR "qlinkbot requires libbarobo version ${required_libbarobo_version}")
-endif()
 
 include_directories(${LIBBAROBO_INCLUDE_DIRS})
 
