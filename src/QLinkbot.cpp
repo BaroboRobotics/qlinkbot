@@ -37,7 +37,12 @@ QLinkbot::QLinkbot()
   QMetaObject::invokeMethod(worker_, "doWork", Qt::QueuedConnection); 
 }
 
-void QLinkbot::connect(const QString & id)
+void QLinkbot::disconnectRobot()
+{
+  CMobot::disconnect();
+}
+
+void QLinkbot::connectRobot(const QString & id)
 {
   int rc;
   rc = connectWithAddress(static_cast<const char*>(id.toLatin1().constData()), 1);
