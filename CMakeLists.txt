@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8.11)
 
 set(VERSION_MAJOR 0)
 set(VERSION_MINOR 1)
-set(VERSION_PATCH 0)
+set(VERSION_PATCH 1)
 set(VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
 
 ##############################################################################
@@ -19,11 +19,7 @@ include_directories(${PUBLIC_INCLUDE_DIR})
 ##############################################################################
 # Setup
 
-set(required_libbarobo_version 0.1.0)
 add_subdirectory(../libbarobo libbarobo)
-if(NOT LIBBAROBO_VERSION VERSION_EQUAL ${required_libbarobo_version})
-  message(FATAL_ERROR "qlinkbot requires libbarobo version ${required_libbarobo_version}")
-endif()
 
 include_directories(${LIBBAROBO_INCLUDE_DIRS})
 
