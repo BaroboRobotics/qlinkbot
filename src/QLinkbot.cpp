@@ -96,7 +96,7 @@ void QLinkbot::newMotorValues(double j1, double j2, double j3, int mask)
   angles[2] = j3;
   int i;
   for(i = 0; i < 3; i++) {
-    if(mask && (1<<i)) {
+    if(mask & (1<<i)) {
       emit jointChanged(this, i+1, angles[i]);
     }
   }
