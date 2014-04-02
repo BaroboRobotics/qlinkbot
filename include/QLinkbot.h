@@ -38,13 +38,14 @@ class QBAROBOSHARED_EXPORT QLinkbot : public QObject, public CLinkbot
 
   signals:
     void buttonChanged(QLinkbot *linkbot, int button, int event);
-    void jointChanged(QLinkbot *linkbot, double j1, double j2, double j3);
+    void jointsChanged(QLinkbot *linkbot, double j1, double j2, double j3, int mask);
+    void jointChanged(QLinkbot *linkbot, int joint, double anglePosition);
     void accelChanged(QLinkbot *linkbot, double x, double y, double z);
 
   public slots:
     void newAccelValues(double x, double y, double z);
     void newButtonValues(int button, int buttonDown);
-    void newMotorValues(double j1, double j2, double j3);
+    void newMotorValues(double j1, double j2, double j3, int mask);
 
   private:
     QString id_;
@@ -61,7 +62,7 @@ class QBAROBOSHARED_EXPORT QLinkbotWorker : public QObject
     QLinkbotWorker(QLinkbot *linkbot);
     void setNewAccelValues(double x, double y, double z);
     void setNewButtonValues(int button, int down);
-    void setNewMotorValues(double j1, double j2, double j3);
+    void setNewMotorValues(double j1, double j2, double j3, int mask);
 
   public slots:
     void doWork();
@@ -69,7 +70,7 @@ class QBAROBOSHARED_EXPORT QLinkbotWorker : public QObject
   signals:
     void accelChanged(double x, double y, double z);
     void buttonChanged(int button, int buttonDown);
-    void motorChanged(double j1, double j2, double j3);
+    void motorChanged(double j1, double j2, double j3, int mask);
 
   private:
     QLinkbot* parentLinkbot_;
@@ -82,6 +83,7 @@ class QBAROBOSHARED_EXPORT QLinkbotWorker : public QObject
     int button_[2];
     bool motorValuesDirty_;
     double motor_[3];
+    int motorMask_;
 };
 
 #endif

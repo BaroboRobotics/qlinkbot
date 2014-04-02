@@ -15,10 +15,10 @@ void linkbotButtonCallback(void* linkbot, int button, int buttonDown)
   l->setNewButtonValues(button, buttonDown);
 }
 
-void linkbotJointCallback(int , double j1, double j2, double j3, double , void *linkbot)
+void linkbotJointCallback(int , double j1, double j2, double j3, double , int mask, void *linkbot)
 {
   QLinkbotWorker* l = (QLinkbotWorker*)linkbot;
-  l->setNewMotorValues(j1, j2, j3);
+  l->setNewMotorValues(j1, j2, j3, mask);
 }
 
 QLinkbot::QLinkbot()
@@ -32,8 +32,8 @@ QLinkbot::QLinkbot()
       Qt::QueuedConnection);
   QObject::connect(worker_, SIGNAL(buttonChanged(int, int)),
       this, SLOT(newButtonValues(int, int)));
-  QObject::connect(worker_, SIGNAL(motorChanged(double, double, double)),
-      this, SLOT(newMotorValues(double, double, double)));
+  QObject::connect(worker_, SIGNAL(motorChanged(double, double, double, int)),
+      this, SLOT(newMotorValues(double, double, double, int)));
   QMetaObject::invokeMethod(worker_, "doWork", Qt::QueuedConnection); 
 }
 
@@ -87,9 +87,19 @@ void QLinkbot::newButtonValues(int button, int buttonDown)
   emit buttonChanged(this, button, buttonDown);
 }
 
-void QLinkbot::newMotorValues(double j1, double j2, double j3)
+void QLinkbot::newMotorValues(double j1, double j2, double j3, int mask)
 {
-  emit jointChanged(this, j1, j2, j3);
+  emit jointsChanged(this, j1, j2, j3, mask);
+  double angles[3];
+  angles[0] = j1;
+  angles[1] = j2;
+  angles[2] = j3;
+  int i;
+  for(i = 0; i < 3; i++) {
+    if(mask && (1<<i)) {
+      emit jointChanged(this, i+1, angles[i]);
+    }
+  }
 }
 
 QLinkbotWorker::QLinkbotWorker(QLinkbot* linkbot)
@@ -119,13 +129,14 @@ void QLinkbotWorker::setNewButtonValues(int button, int down)
   lock_.unlock();
 }
 
-void QLinkbotWorker::setNewMotorValues(double j1, double j2, double j3)
+void QLinkbotWorker::setNewMotorValues(double j1, double j2, double j3, int mask)
 {
   lock_.lock();
   motor_[0] = j1;
   motor_[1] = j2;
   motor_[2] = j3;
   motorValuesDirty_ = true;
+  motorMask_ |= mask;
   cond_.wakeAll();
   lock_.unlock();
 }
@@ -152,8 +163,9 @@ void QLinkbotWorker::doWork()
       buttonValuesDirty_ = false;
     }
     if(motorValuesDirty_) {
-      emit motorChanged(motor_[0], motor_[1], motor_[2]);
+      emit motorChanged(motor_[0], motor_[1], motor_[2], motorMask_);
       motorValuesDirty_ = false;
+      motorMask_ = 0;
     }
     lock_.unlock();
   }
