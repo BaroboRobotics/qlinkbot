@@ -38,12 +38,6 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG")
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 
-if(DEFINED ENV{QTDIR})
-  set(CMAKE_PREFIX_PATH 
-      ${CMAKE_PREFIX_PATH}
-      $ENV{QTDIR}lib/cmake/Qt5
-     )
-endif()
 find_package(Qt5Core)
 find_package(Qt5Widgets)
 ##
