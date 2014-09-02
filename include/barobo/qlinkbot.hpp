@@ -6,13 +6,11 @@
 #ifndef Q_MOC_RUN
 #include "baromesh/baromesh.hpp"
 #endif
-
 #include <memory>
 
 #include <QObject>
 #include <QMutex>
 #include <QWaitCondition>
-
 
 class QLinkbot;
 class QLinkbotWorker;

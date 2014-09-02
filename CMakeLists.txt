@@ -40,8 +40,6 @@ add_dependency(baromesh)
 
 set(sources
   src/qlinkbot.cpp
-  src/barobobridge.cpp
-  src/barobobridge.hpp
   include/barobo/qlinkbot.hpp
 )
 
