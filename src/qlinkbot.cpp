@@ -1,4 +1,4 @@
-#include "QLinkbot.h"
+#include "barobo/qlinkbot.hpp"
 #include <iostream>
 #include <QThread>
 #include <QDebug>
@@ -39,32 +39,33 @@ QLinkbot::QLinkbot()
 
 void QLinkbot::disconnectRobot()
 {
-  CMobot::disconnect();
 }
 
 void QLinkbot::connectRobot(const QString & id)
 {
-  int rc;
-  rc = connectWithAddress(static_cast<const char*>(id.toLatin1().constData()), 1);
-  if(rc) {
-    throw QString("Could not connect to the following robot: ") + id;
-  }
-  id_ = id;
+    mProxy.reset(new robot::Proxy(id.toStdString()));
+
+    auto serviceInfo = mProxy->connect().get();
+    if (serviceInfo.connected()) {
+        qDebug() << id << " connected\n";
+    }
+    else {
+        throw QString("Could not connect to the following robot: ") + id;
+    }
+
+    id_ = id;
 }
 
 int QLinkbot::enableAccelEventCallback()
 {
-  return CLinkbot::enableAccelEventCallback(worker_, linkbotAccelCallback);
 }
 
 int QLinkbot::enableButtonCallback()
 {
-  return CMobot::enableButtonCallback(worker_, linkbotButtonCallback);
 }
 
 int QLinkbot::enableJointEventCallback()
 {
-  return CMobot::enableJointEventCallback(worker_, linkbotJointCallback);
 }
 
 void QLinkbot::lock()
@@ -101,6 +102,69 @@ void QLinkbot::newMotorValues(double j1, double j2, double j3, int mask)
     }
   }
 }
+
+
+int QLinkbot::setJointSpeeds (double, double, double) {
+#warning Unimplemented stub function in qlinkbot
+    qWarning() << "Unimplemented stub function in qlinkbot";
+    return 0;
+}
+int QLinkbot::disableAccelEventCallback () {
+#warning Unimplemented stub function in qlinkbot
+    qWarning() << "Unimplemented stub function in qlinkbot";
+    return 0;
+}
+int QLinkbot::disableButtonCallback () {
+#warning Unimplemented stub function in qlinkbot
+    qWarning() << "Unimplemented stub function in qlinkbot";
+    return 0;
+}
+int QLinkbot::disableJointEventCallback () {
+#warning Unimplemented stub function in qlinkbot
+    qWarning() << "Unimplemented stub function in qlinkbot";
+    return 0;
+}
+int QLinkbot::getJointAngles (double, double, double, int) {
+#warning Unimplemented stub function in qlinkbot
+    qWarning() << "Unimplemented stub function in qlinkbot";
+    return 0;
+}
+int QLinkbot::moveNB (double, double, double) {
+#warning Unimplemented stub function in qlinkbot
+    qWarning() << "Unimplemented stub function in qlinkbot";
+    return 0;
+}
+int QLinkbot::moveToNB (double, double, double) {
+#warning Unimplemented stub function in qlinkbot
+    qWarning() << "Unimplemented stub function in qlinkbot";
+    return 0;
+}
+int QLinkbot::setColorRGB (int, int, int) {
+#warning Unimplemented stub function in qlinkbot
+    qWarning() << "Unimplemented stub function in qlinkbot";
+    return 0;
+}
+int QLinkbot::setJointEventThreshold (int, double) {
+#warning Unimplemented stub function in qlinkbot
+    qWarning() << "Unimplemented stub function in qlinkbot";
+    return 0;
+}
+int QLinkbot::stop () {
+#warning Unimplemented stub function in qlinkbot
+    qWarning() << "Unimplemented stub function in qlinkbot";
+    return 0;
+}
+int QLinkbot::setBuzzerFrequencyOn (int) {
+#warning Unimplemented stub function in qlinkbot
+    qWarning() << "Unimplemented stub function in qlinkbot";
+    return 0;
+}
+int QLinkbot::getVersions (unsigned&) {
+#warning Unimplemented stub function in qlinkbot
+    qWarning() << "Unimplemented stub function in qlinkbot";
+    return 0;
+}
+
 
 QLinkbotWorker::QLinkbotWorker(QLinkbot* linkbot)
 {

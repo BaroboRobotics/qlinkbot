@@ -1,8 +1,13 @@
 #ifndef QLINKBOT_H__
 #define QLINKBOT_H__
 
-#include <linkbot.h>
 #include "qbarobo_global.h"
+
+#ifndef Q_MOC_RUN
+#include "baromesh/baromesh.hpp"
+#endif
+
+#include <memory>
 
 #include <QObject>
 #include <QMutex>
@@ -16,7 +21,7 @@ void linkbotAccelCallback(int millis, double x, double y, double z, QLinkbot* li
 void linkbotButtonCallback(CLinkbot* linkbot, int button, int buttonDown);
 void linkbotJointCallback(int millis, double j1, double j2, double j3, double j4, QLinkbot* linkbot);
 
-class QBAROBOSHARED_EXPORT QLinkbot : public QObject, public CLinkbot
+class QBAROBOSHARED_EXPORT QLinkbot : public QObject
 {
   Q_OBJECT
   public:
@@ -36,6 +41,19 @@ class QBAROBOSHARED_EXPORT QLinkbot : public QObject, public CLinkbot
     }
     inline bool operator!=(const QLinkbot& other){return !operator==(other);}
 
+    int setJointSpeeds (double, double, double);
+    int disableAccelEventCallback ();
+    int disableButtonCallback ();
+    int disableJointEventCallback ();
+    int getJointAngles (double, double, double, int=10);
+    int moveNB (double, double, double);
+    int moveToNB (double, double, double);
+    int setColorRGB (int, int, int);
+    int setJointEventThreshold (int, double);
+    int stop ();
+    int setBuzzerFrequencyOn (int);
+    int getVersions (unsigned&);
+
   signals:
     void buttonChanged(QLinkbot *linkbot, int button, int event);
     void jointsChanged(QLinkbot *linkbot, double j1, double j2, double j3, int mask);
@@ -53,6 +71,8 @@ class QBAROBOSHARED_EXPORT QLinkbot : public QObject, public CLinkbot
     QWaitCondition cond_;
     QThread *workerthread_;
     QLinkbotWorker* worker_;
+
+    std::unique_ptr<robot::Proxy> mProxy;
 };
 
 class QBAROBOSHARED_EXPORT QLinkbotWorker : public QObject
