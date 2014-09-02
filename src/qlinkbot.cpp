@@ -21,7 +21,7 @@ void linkbotJointCallback(int , double j1, double j2, double j3, double , int ma
   l->setNewMotorValues(j1, j2, j3, mask);
 }
 
-QLinkbot::QLinkbot()
+QLinkbot::QLinkbot(const QString& id) : id_(id), mProxy(new robot::Proxy(id.toStdString()))
 {
   worker_ = new QLinkbotWorker(this);
   workerthread_ = new QThread();
@@ -41,19 +41,19 @@ void QLinkbot::disconnectRobot()
 {
 }
 
-void QLinkbot::connectRobot(const QString & id)
+void QLinkbot::connectRobot()
 {
-    mProxy.reset(new robot::Proxy(id.toStdString()));
-
     auto serviceInfo = mProxy->connect().get();
     if (serviceInfo.connected()) {
-        qDebug() << id << " connected\n";
+        qDebug() << id_ << " connected\n";
+        if (serviceInfo.rpcVersion() != rpc::Version<>::triplet() ||
+            serviceInfo.interfaceVersion() != rpc::Version<barobo::Robot>::triplet()) {
+          throw QString("version mismatch connecting to ") + id_;
+        }
     }
     else {
-        throw QString("Could not connect to the following robot: ") + id;
+        throw QString("Could not connect to the following robot: ") + id_;
     }
-
-    id_ = id;
 }
 
 int QLinkbot::enableAccelEventCallback()
@@ -159,10 +159,18 @@ int QLinkbot::setBuzzerFrequencyOn (int) {
     qWarning() << "Unimplemented stub function in qlinkbot";
     return 0;
 }
-int QLinkbot::getVersions (unsigned&) {
-#warning Unimplemented stub function in qlinkbot
-    qWarning() << "Unimplemented stub function in qlinkbot";
-    return 0;
+int QLinkbot::getVersions (uint32_t& major, uint32_t& minor, uint32_t& patch) {
+    using MethodIn = rpc::MethodIn<barobo::Robot>;
+    if (mProxy) {
+        auto version = mProxy->fire(MethodIn::getFirmwareVersion{}).get();
+        major = version.value.major;
+        minor = version.value.minor;
+        patch = version.value.patch;
+        return 0;
+    }
+    else {
+
+    }
 }
 
 

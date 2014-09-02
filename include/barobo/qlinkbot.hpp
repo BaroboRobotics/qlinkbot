@@ -23,13 +23,13 @@ class QBAROBOSHARED_EXPORT QLinkbot : public QObject
 {
   Q_OBJECT
   public:
-    QLinkbot();
-    virtual void connectRobot(const QString &id);
-    virtual void disconnectRobot();
-    virtual int enableAccelEventCallback();
-    virtual int enableButtonCallback();
-    virtual int enableJointEventCallback();
-    virtual QString getSerialID() const {return id_;}
+    QLinkbot(const QString&);
+    void connectRobot();
+    void disconnectRobot();
+    int enableAccelEventCallback();
+    int enableButtonCallback();
+    int enableJointEventCallback();
+    QString getSerialID() const {return id_;}
 
     void lock();
     void unlock();
@@ -50,7 +50,7 @@ class QBAROBOSHARED_EXPORT QLinkbot : public QObject
     int setJointEventThreshold (int, double);
     int stop ();
     int setBuzzerFrequencyOn (int);
-    int getVersions (unsigned&);
+    int getVersions (uint32_t&, uint32_t&, uint32_t&);
 
   signals:
     void buttonChanged(QLinkbot *linkbot, int button, int event);
