@@ -3,14 +3,13 @@
 
 #include "qbarobo_global.h"
 
-#ifndef Q_MOC_RUN
-#include "baromesh/baromesh.hpp"
-#endif
-#include <memory>
-
 #include <QObject>
 #include <QMutex>
 #include <QWaitCondition>
+
+namespace robot {
+    class Proxy;
+}
 
 class QLinkbot;
 class QLinkbotWorker;
@@ -23,7 +22,9 @@ class QBAROBOSHARED_EXPORT QLinkbot : public QObject
 {
   Q_OBJECT
   public:
-    QLinkbot(const QString&);
+    explicit QLinkbot(const QString&);
+    ~QLinkbot ();
+
     void connectRobot();
     void disconnectRobot();
     int enableAccelEventCallback();
@@ -70,7 +71,8 @@ class QBAROBOSHARED_EXPORT QLinkbot : public QObject
     QThread *workerthread_;
     QLinkbotWorker* worker_;
 
-    std::unique_ptr<robot::Proxy> mProxy;
+    // smart pointer better, but MOC requires insight into constructors or something :(
+    robot::Proxy* mProxy;
 };
 
 class QBAROBOSHARED_EXPORT QLinkbotWorker : public QObject

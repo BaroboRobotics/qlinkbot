@@ -1,7 +1,13 @@
 #include "barobo/qlinkbot.hpp"
-#include <iostream>
+
+#ifndef Q_MOC_RUN
+#include "baromesh/baromesh.hpp"
+#endif
+
 #include <QThread>
 #include <QDebug>
+
+#include <iostream>
 
 void linkbotAccelCallback(int , double x, double y, double z, void* worker)
 {
@@ -21,6 +27,7 @@ void linkbotJointCallback(int , double j1, double j2, double j3, double , int ma
   l->setNewMotorValues(j1, j2, j3, mask);
 }
 
+// FIXME exception-safety!
 QLinkbot::QLinkbot(const QString& id) : id_(id), mProxy(new robot::Proxy(id.toStdString()))
 {
   worker_ = new QLinkbotWorker(this);
@@ -35,6 +42,10 @@ QLinkbot::QLinkbot(const QString& id) : id_(id), mProxy(new robot::Proxy(id.toSt
   QObject::connect(worker_, SIGNAL(motorChanged(double, double, double, int)),
       this, SLOT(newMotorValues(double, double, double, int)));
   QMetaObject::invokeMethod(worker_, "doWork", Qt::QueuedConnection); 
+}
+
+QLinkbot::~QLinkbot () {
+  delete mProxy;
 }
 
 void QLinkbot::disconnectRobot()
