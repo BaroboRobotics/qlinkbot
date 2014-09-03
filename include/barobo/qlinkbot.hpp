@@ -7,6 +7,9 @@
 #include <QMutex>
 #include <QWaitCondition>
 
+#include <memory>
+#include <atomic>
+
 namespace robot {
     class Proxy;
 }
@@ -25,12 +28,20 @@ class QBAROBOSHARED_EXPORT QLinkbot : public QObject
     explicit QLinkbot(const QString&);
     ~QLinkbot ();
 
+    // noncopyable
+    QLinkbot (const QLinkbot&) = delete;
+    QLinkbot& operator= (const QLinkbot&) = delete;
+
+    // movable
+    friend void swap (QLinkbot& lhs, QLinkbot& rhs);
+    QLinkbot (QLinkbot&&);
+
     void connectRobot();
     void disconnectRobot();
     int enableAccelEventCallback();
     int enableButtonCallback();
     int enableJointEventCallback();
-    QString getSerialID() const {return id_;}
+    QString getSerialID() const;
 
     void lock();
     void unlock();
@@ -65,14 +76,8 @@ class QBAROBOSHARED_EXPORT QLinkbot : public QObject
     void newMotorValues(double j1, double j2, double j3, int mask);
 
   private:
-    QString id_;
-    QMutex lock_;
-    QWaitCondition cond_;
-    QThread *workerthread_;
-    QLinkbotWorker* worker_;
-
-    // smart pointer better, but MOC requires insight into constructors or something :(
-    robot::Proxy* mProxy;
+    struct Impl;
+    std::unique_ptr<Impl> m;
 };
 
 class QBAROBOSHARED_EXPORT QLinkbotWorker : public QObject
@@ -80,6 +85,7 @@ class QBAROBOSHARED_EXPORT QLinkbotWorker : public QObject
   Q_OBJECT
   public:
     QLinkbotWorker(QLinkbot *linkbot);
+    ~QLinkbotWorker ();
     void setNewAccelValues(double x, double y, double z);
     void setNewButtonValues(int button, int down);
     void setNewMotorValues(double j1, double j2, double j3, int mask);
@@ -96,7 +102,7 @@ class QBAROBOSHARED_EXPORT QLinkbotWorker : public QObject
     QLinkbot* parentLinkbot_;
     QMutex lock_;
     QWaitCondition cond_;
-    bool runflag_;
+    std::atomic<bool> runflag_ = { false };
     bool accelValuesDirty_;
     double accel_[3];
     bool buttonValuesDirty_;

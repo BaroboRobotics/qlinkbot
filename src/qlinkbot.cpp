@@ -29,26 +29,49 @@ void linkbotJointCallback(int , double j1, double j2, double j3, double , int ma
   l->setNewMotorValues(j1, j2, j3, mask);
 }
 
-// FIXME exception-safety!
-QLinkbot::QLinkbot(const QString& id) : id_(id), mProxy(new robot::Proxy(id.toStdString()))
+struct QLinkbot::Impl {
+    Impl (const QString& id, QLinkbot* parent)
+        : serialId(id)
+        , worker(new QLinkbotWorker(parent))
+        , proxy(id.toStdString()) { }
+
+    QString serialId;
+    QMutex lock;
+    QWaitCondition cond;
+    QThread workerthread;
+    std::unique_ptr<QLinkbotWorker> worker;
+    robot::Proxy proxy;
+};
+
+QLinkbot::QLinkbot(const QString& id)
+        : m(new QLinkbot::Impl(id, this))
 {
-  worker_ = new QLinkbotWorker(this);
-  workerthread_ = new QThread();
-  worker_->moveToThread(workerthread_);
-  workerthread_->start();
+  m->worker->moveToThread(&m->workerthread);
+  m->workerthread.start();
   // TODO worker object should go away, wire these up from robot proxy
-  QObject::connect(worker_, SIGNAL(accelChanged(double, double, double)),
+  QObject::connect(m->worker.get(), SIGNAL(accelChanged(double, double, double)),
       this, SLOT(newAccelValues(double, double, double)),
       Qt::QueuedConnection);
-  QObject::connect(worker_, SIGNAL(buttonChanged(int, int)),
+  QObject::connect(m->worker.get(), SIGNAL(buttonChanged(int, int)),
       this, SLOT(newButtonValues(int, int)));
-  QObject::connect(worker_, SIGNAL(motorChanged(double, double, double, int)),
+  QObject::connect(m->worker.get(), SIGNAL(motorChanged(double, double, double, int)),
       this, SLOT(newMotorValues(double, double, double, int)));
-  QMetaObject::invokeMethod(worker_, "doWork", Qt::QueuedConnection); 
+  QMetaObject::invokeMethod(m->worker.get(), "doWork", Qt::QueuedConnection); 
 }
 
+// Needed for unique_ptr, see http://herbsutter.com/gotw/_100/
 QLinkbot::~QLinkbot () {
-  delete mProxy;
+    m->workerthread.quit();
+    m->workerthread.wait();
+}
+
+void swap (QLinkbot& lhs, QLinkbot& rhs) {
+    using std::swap;
+    swap(lhs.m, rhs.m);
+}
+
+QLinkbot::QLinkbot (QLinkbot&& other) {
+    swap(*this, other);
 }
 
 void QLinkbot::disconnectRobot()
@@ -57,16 +80,16 @@ void QLinkbot::disconnectRobot()
 
 void QLinkbot::connectRobot()
 {
-    auto serviceInfo = mProxy->connect().get();
+    auto serviceInfo = m->proxy.connect().get();
     if (serviceInfo.connected()) {
-        qDebug() << id_ << " connected\n";
+        qDebug() << m->serialId << " connected\n";
         if (serviceInfo.rpcVersion() != rpc::Version<>::triplet() ||
             serviceInfo.interfaceVersion() != rpc::Version<barobo::Robot>::triplet()) {
-          throw QString("version mismatch connecting to ") + id_;
+          throw QString("version mismatch connecting to ") + m->serialId;
         }
     }
     else {
-        throw QString("Could not connect to the following robot: ") + id_;
+        throw QString("Could not connect to the following robot: ") + m->serialId;
     }
 }
 
@@ -79,7 +102,7 @@ int QLinkbot::enableAccelEventCallback()
 int QLinkbot::enableButtonCallback()
 {
     try {
-        mProxy->fire(MethodIn::enableButtonEvent{true}).get();
+        m->proxy.fire(MethodIn::enableButtonEvent{true}).get();
     }
     catch (...) {
         return -1;
@@ -93,14 +116,18 @@ int QLinkbot::enableJointEventCallback()
     qWarning() << "Unimplemented stub function in qlinkbot";
 }
 
+QString QLinkbot::getSerialID() const {
+    return m->serialId;
+}
+
 void QLinkbot::lock()
 {
-  lock_.lock();
+  m->lock.lock();
 }
 
 void QLinkbot::unlock()
 {
-  lock_.unlock();
+  m->lock.unlock();
 }
 
 void QLinkbot::newAccelValues(double x, double y, double z)
@@ -151,7 +178,7 @@ int QLinkbot::disableJointEventCallback () {
 }
 int QLinkbot::getJointAngles (double& e1, double& e2, double& e3, int) {
     try {
-        auto values = mProxy->fire(MethodIn::getEncoderValues{}).get();
+        auto values = m->proxy.fire(MethodIn::getEncoderValues{}).get();
         assert(values.values_count >= 3);
         e1 = values.values[0];
         e2 = values.values[1];
@@ -174,7 +201,7 @@ int QLinkbot::moveToNB (double, double, double) {
 }
 int QLinkbot::setColorRGB (int r, int g, int b) {
     try {
-        mProxy->fire(MethodIn::setLedColor{
+        m->proxy.fire(MethodIn::setLedColor{
             uint32_t(r << 16 | g << 8 | b)
         }).get();
     }
@@ -196,7 +223,7 @@ int QLinkbot::stop () {
 
 int QLinkbot::setBuzzerFrequencyOn (float freq) {
     try {
-        mProxy->fire(MethodIn::setBuzzerFrequency{freq}).get();
+        m->proxy.fire(MethodIn::setBuzzerFrequency{freq}).get();
     }
     catch (...) {
         return -1;
@@ -205,7 +232,7 @@ int QLinkbot::setBuzzerFrequencyOn (float freq) {
 }
 
 int QLinkbot::getVersions (uint32_t& major, uint32_t& minor, uint32_t& patch) {
-    auto version = mProxy->fire(MethodIn::getFirmwareVersion{}).get();
+    auto version = m->proxy.fire(MethodIn::getFirmwareVersion{}).get();
     major = version.major;
     minor = version.minor;
     patch = version.patch;
@@ -216,7 +243,11 @@ int QLinkbot::getVersions (uint32_t& major, uint32_t& minor, uint32_t& patch) {
 QLinkbotWorker::QLinkbotWorker(QLinkbot* linkbot)
 {
   parentLinkbot_ = linkbot;
-  runflag_ = true;
+}
+
+QLinkbotWorker::~QLinkbotWorker () {
+  runflag_ = false;
+
 }
 
 void QLinkbotWorker::setNewAccelValues(double x, double y, double z)
