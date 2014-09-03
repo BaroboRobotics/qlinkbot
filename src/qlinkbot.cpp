@@ -15,8 +15,9 @@
 #include <iostream>
 
 inline QDebug operator<< (QDebug dbg, const rpc::VersionTriplet& triplet) {
+    QDebugStateSaver s { dbg };
     dbg.nospace() << triplet.major() << '.' << triplet.minor() << '.' << triplet.patch();
-    return dbg.space();
+    return dbg;
 }
 
 using MethodIn = rpc::MethodIn<barobo::Robot>;
@@ -73,26 +74,25 @@ void QLinkbot::disconnectRobot()
 void QLinkbot::connectRobot()
 {
     auto serviceInfo = m->proxy.connect().get();
-    qDebug() << "Local RPC version: " << rpc::Version<>::triplet();
-    qDebug() << "Local Robot interface version: " << rpc::Version<barobo::Robot>::triplet();
-    qDebug() << m->serialId << " RPC version: " << serviceInfo.rpcVersion();
-    qDebug() << m->serialId << " Robot interface version: " << serviceInfo.interfaceVersion();
+
+    // Check version before we check if the connection succeeded--the user will
+    // probably want to know to flash the robot, regardless.
+    if (serviceInfo.rpcVersion() != rpc::Version<>::triplet()) {
+        throw VersionMismatch(m->serialId.toStdString() + " RPC version " +
+            to_string(serviceInfo.rpcVersion()) + " != local RPC version " +
+            to_string(rpc::Version<>::triplet()));
+    }
+    else if (serviceInfo.interfaceVersion() != rpc::Version<barobo::Robot>::triplet()) {
+        throw VersionMismatch(m->serialId.toStdString() + " Robot interface version " +
+            to_string(serviceInfo.interfaceVersion()) + " != local Robot interface version " +
+            to_string(rpc::Version<barobo::Robot>::triplet()));
+    }
 
     if (serviceInfo.connected()) {
-        qDebug() << m->serialId << ": connected";
-        if (serviceInfo.rpcVersion() != rpc::Version<>::triplet() ||
-            serviceInfo.interfaceVersion() != rpc::Version<barobo::Robot>::triplet()) {
-            throw std::runtime_error(
-                m->serialId.toStdString() + " version mismatch: remote RPC/" +
-                to_string(serviceInfo.rpcVersion()) + " Robot/" +
-                to_string(serviceInfo.interfaceVersion()) + " != local RPC/" +
-                to_string(rpc::Version<>::triplet()) + " Robot/" +
-                to_string(rpc::Version<barobo::Robot>::triplet()));
-        }
+        qDebug().nospace() << qPrintable(m->serialId) << ": connected";
     }
     else {
-        throw std::runtime_error(
-            m->serialId.toStdString() + ": connection refused");
+        throw ConnectionRefused(m->serialId.toStdString() + " refused our connection");
     }
 }
 
@@ -235,9 +235,16 @@ int QLinkbot::setBuzzerFrequencyOn (float freq) {
 }
 
 int QLinkbot::getVersions (uint32_t& major, uint32_t& minor, uint32_t& patch) {
-    auto version = m->proxy.fire(MethodIn::getFirmwareVersion{}).get();
-    major = version.major;
-    minor = version.minor;
-    patch = version.patch;
+    try {
+        auto version = m->proxy.fire(MethodIn::getFirmwareVersion{}).get();
+        major = version.major;
+        minor = version.minor;
+        patch = version.patch;
+        qDebug().nospace() << qPrintable(m->serialId) << " Firmware version "
+                           << major << '.' << minor << '.' << patch;
+    }
+    catch (...) {
+        return -1;
+    }
     return 0;
 }
