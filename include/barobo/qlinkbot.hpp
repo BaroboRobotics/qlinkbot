@@ -30,6 +30,7 @@ public:
     int enableJointEventCallback();
     QString getSerialID() const;
 
+    // hlh: are these used?
     void lock();
     void unlock();
 
