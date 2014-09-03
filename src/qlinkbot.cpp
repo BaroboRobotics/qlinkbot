@@ -58,14 +58,16 @@ QLinkbot::QLinkbot(const QString& id)
     QObject::connect(&m->worker, SIGNAL(accelChanged(double, double, double)),
         this, SLOT(newAccelValues(double, double, double)),
         Qt::QueuedConnection);
-    QObject::connect(&m->worker, SIGNAL(buttonChanged(int, int)),
-        this, SLOT(newButtonValues(int, int)));
+    //QObject::connect(&m->worker, SIGNAL(buttonChanged(int, int)),
+    //    this, SLOT(newButtonValues(int, int)));
     QObject::connect(&m->worker, SIGNAL(motorChanged(double, double, double, int)),
         this, SLOT(newMotorValues(double, double, double, int)));
-    QMetaObject::invokeMethod(&m->worker, "doWork", Qt::QueuedConnection); 
+    QMetaObject::invokeMethod(&m->worker, "doWork", Qt::QueuedConnection);
+    m->proxy.buttonEvent.connect(BIND_MEM_CB(&QLinkbot::newButtonValues, this));
 }
 
-// Needed for unique_ptr, see http://herbsutter.com/gotw/_100/
+// Out-of-line destructor (even if empty) is needed for unique_ptr, see
+// http://herbsutter.com/gotw/_100/
 QLinkbot::~QLinkbot () {
     m->workerthread.quit();
     m->workerthread.wait();
