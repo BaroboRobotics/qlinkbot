@@ -14,6 +14,11 @@
 
 #include <iostream>
 
+inline QDebug operator<< (QDebug dbg, const rpc::VersionTriplet& triplet) {
+    dbg.nospace() << triplet.major() << '.' << triplet.minor() << '.' << triplet.patch();
+    return dbg.space();
+}
+
 using MethodIn = rpc::MethodIn<barobo::Robot>;
 
 struct QLinkbot::Impl {
@@ -68,15 +73,26 @@ void QLinkbot::disconnectRobot()
 void QLinkbot::connectRobot()
 {
     auto serviceInfo = m->proxy.connect().get();
+    qDebug() << "Local RPC version: " << rpc::Version<>::triplet();
+    qDebug() << "Local Robot interface version: " << rpc::Version<barobo::Robot>::triplet();
+    qDebug() << m->serialId << " RPC version: " << serviceInfo.rpcVersion();
+    qDebug() << m->serialId << " Robot interface version: " << serviceInfo.interfaceVersion();
+
     if (serviceInfo.connected()) {
-        qDebug() << m->serialId << " connected\n";
+        qDebug() << m->serialId << ": connected";
         if (serviceInfo.rpcVersion() != rpc::Version<>::triplet() ||
             serviceInfo.interfaceVersion() != rpc::Version<barobo::Robot>::triplet()) {
-            throw QString("version mismatch connecting to ") + m->serialId;
+            throw std::runtime_error(
+                m->serialId.toStdString() + " version mismatch: remote RPC/" +
+                to_string(serviceInfo.rpcVersion()) + " Robot/" +
+                to_string(serviceInfo.interfaceVersion()) + " != local RPC/" +
+                to_string(rpc::Version<>::triplet()) + " Robot/" +
+                to_string(rpc::Version<barobo::Robot>::triplet()));
         }
     }
     else {
-        throw QString("Could not connect to the following robot: ") + m->serialId;
+        throw std::runtime_error(
+            m->serialId.toStdString() + ": connection refused");
     }
 }
 
