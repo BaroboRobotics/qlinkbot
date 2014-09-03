@@ -4,15 +4,13 @@
 #include "qbarobo_global.h"
 
 #include <QObject>
-#include <QMutex>
-#include <QWaitCondition>
 
 #include <memory>
 
 class QBAROBOSHARED_EXPORT QLinkbot : public QObject
 {
-  Q_OBJECT
-  public:
+    Q_OBJECT
+public:
     explicit QLinkbot(const QString&);
     ~QLinkbot ();
 
@@ -52,18 +50,18 @@ class QBAROBOSHARED_EXPORT QLinkbot : public QObject
     int setBuzzerFrequencyOn (float);
     int getVersions (uint32_t&, uint32_t&, uint32_t&);
 
-  signals:
+signals:
     void buttonChanged(QLinkbot *linkbot, int button, int event);
     void jointsChanged(QLinkbot *linkbot, double j1, double j2, double j3, int mask);
     void jointChanged(QLinkbot *linkbot, int joint, double anglePosition);
     void accelChanged(QLinkbot *linkbot, double x, double y, double z);
 
-  public slots:
+public slots:
     void newAccelValues(double x, double y, double z);
     void newButtonValues(int button, int buttonDown);
     void newMotorValues(double j1, double j2, double j3, int mask);
 
-  private:
+private:
     struct Impl;
     std::unique_ptr<Impl> m;
 };
