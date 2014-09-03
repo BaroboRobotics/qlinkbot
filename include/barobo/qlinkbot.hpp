@@ -44,13 +44,13 @@ class QBAROBOSHARED_EXPORT QLinkbot : public QObject
     int disableAccelEventCallback ();
     int disableButtonCallback ();
     int disableJointEventCallback ();
-    int getJointAngles (double, double, double, int=10);
+    int getJointAngles (double&, double&, double&, int=10);
     int moveNB (double, double, double);
     int moveToNB (double, double, double);
     int setColorRGB (int, int, int);
     int setJointEventThreshold (int, double);
     int stop ();
-    int setBuzzerFrequencyOn (int);
+    int setBuzzerFrequencyOn (float);
     int getVersions (uint32_t&, uint32_t&, uint32_t&);
 
   signals:

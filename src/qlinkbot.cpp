@@ -9,6 +9,8 @@
 
 #include <iostream>
 
+using MethodIn = rpc::MethodIn<barobo::Robot>;
+
 void linkbotAccelCallback(int , double x, double y, double z, void* worker)
 {
   QLinkbotWorker* l = (QLinkbotWorker*)worker;
@@ -34,6 +36,7 @@ QLinkbot::QLinkbot(const QString& id) : id_(id), mProxy(new robot::Proxy(id.toSt
   workerthread_ = new QThread();
   worker_->moveToThread(workerthread_);
   workerthread_->start();
+  // TODO worker object should go away, wire these up from robot proxy
   QObject::connect(worker_, SIGNAL(accelChanged(double, double, double)),
       this, SLOT(newAccelValues(double, double, double)),
       Qt::QueuedConnection);
@@ -69,14 +72,25 @@ void QLinkbot::connectRobot()
 
 int QLinkbot::enableAccelEventCallback()
 {
+#warning Unimplemented stub function in qlinkbot
+    qWarning() << "Unimplemented stub function in qlinkbot";
 }
 
 int QLinkbot::enableButtonCallback()
 {
+    try {
+        mProxy->fire(MethodIn::enableButtonEvent{true}).get();
+    }
+    catch (...) {
+        return -1;
+    }
+    return 0;
 }
 
 int QLinkbot::enableJointEventCallback()
 {
+#warning Unimplemented stub function in qlinkbot
+    qWarning() << "Unimplemented stub function in qlinkbot";
 }
 
 void QLinkbot::lock()
@@ -135,9 +149,17 @@ int QLinkbot::disableJointEventCallback () {
     qWarning() << "Unimplemented stub function in qlinkbot";
     return 0;
 }
-int QLinkbot::getJointAngles (double, double, double, int) {
-#warning Unimplemented stub function in qlinkbot
-    qWarning() << "Unimplemented stub function in qlinkbot";
+int QLinkbot::getJointAngles (double& e1, double& e2, double& e3, int) {
+    try {
+        auto values = mProxy->fire(MethodIn::getEncoderValues{}).get();
+        assert(values.values_count >= 3);
+        e1 = values.values[0];
+        e2 = values.values[1];
+        e3 = values.values[2];
+    }
+    catch (...) {
+        return -1;
+    }
     return 0;
 }
 int QLinkbot::moveNB (double, double, double) {
@@ -150,9 +172,15 @@ int QLinkbot::moveToNB (double, double, double) {
     qWarning() << "Unimplemented stub function in qlinkbot";
     return 0;
 }
-int QLinkbot::setColorRGB (int, int, int) {
-#warning Unimplemented stub function in qlinkbot
-    qWarning() << "Unimplemented stub function in qlinkbot";
+int QLinkbot::setColorRGB (int r, int g, int b) {
+    try {
+        mProxy->fire(MethodIn::setLedColor{
+            uint32_t(r << 16 | g << 8 | b)
+        }).get();
+    }
+    catch (...) {
+        return -1;
+    }
     return 0;
 }
 int QLinkbot::setJointEventThreshold (int, double) {
@@ -165,23 +193,23 @@ int QLinkbot::stop () {
     qWarning() << "Unimplemented stub function in qlinkbot";
     return 0;
 }
-int QLinkbot::setBuzzerFrequencyOn (int) {
-#warning Unimplemented stub function in qlinkbot
-    qWarning() << "Unimplemented stub function in qlinkbot";
+
+int QLinkbot::setBuzzerFrequencyOn (float freq) {
+    try {
+        mProxy->fire(MethodIn::setBuzzerFrequency{freq}).get();
+    }
+    catch (...) {
+        return -1;
+    }
     return 0;
 }
-int QLinkbot::getVersions (uint32_t& major, uint32_t& minor, uint32_t& patch) {
-    using MethodIn = rpc::MethodIn<barobo::Robot>;
-    if (mProxy) {
-        auto version = mProxy->fire(MethodIn::getFirmwareVersion{}).get();
-        major = version.value.major;
-        minor = version.value.minor;
-        patch = version.value.patch;
-        return 0;
-    }
-    else {
 
-    }
+int QLinkbot::getVersions (uint32_t& major, uint32_t& minor, uint32_t& patch) {
+    auto version = mProxy->fire(MethodIn::getFirmwareVersion{}).get();
+    major = version.major;
+    minor = version.minor;
+    patch = version.patch;
+    return 0;
 }
 
 
