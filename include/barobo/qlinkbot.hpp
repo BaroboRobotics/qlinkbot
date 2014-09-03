@@ -39,6 +39,7 @@ public:
     }
     inline bool operator!=(const QLinkbot& other){return !operator==(other);}
 
+    // functions take angles in degrees
     int setJointSpeeds (double, double, double);
     int disableAccelEventCallback ();
     int disableButtonCallback ();
