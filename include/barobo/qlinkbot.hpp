@@ -5,6 +5,7 @@
 
 #include <QObject>
 
+#include <stdexcept>
 #include <memory>
 
 class QBAROBOSHARED_EXPORT QLinkbot : public QObject
@@ -49,6 +50,13 @@ public:
     int stop ();
     int setBuzzerFrequencyOn (float);
     int getVersions (uint32_t&, uint32_t&, uint32_t&);
+
+    struct ConnectionRefused : std::runtime_error {
+        ConnectionRefused (std::string s) : std::runtime_error(s) { }
+    };
+    struct VersionMismatch : std::runtime_error {
+        VersionMismatch (std::string s) : std::runtime_error(s) { }
+    };
 
 signals:
     void buttonChanged(QLinkbot *linkbot, int button, int event);
