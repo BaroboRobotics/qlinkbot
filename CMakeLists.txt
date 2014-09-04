@@ -28,14 +28,6 @@ function(add_dependency _name)
     add_subdirectory(${DEPS_ROOT}/${_name} ${_name})
 endfunction()
 
-add_dependency(cxx-util)
-add_dependency(libsfp)
-add_dependency(ribbon-bridge)
-add_dependency(ribbon-bridge-interfaces)
-add_dependency(serial)
-add_dependency(baromesh)
-
-
 # qlinkbot project has one library target
 
 set(sources
@@ -44,22 +36,24 @@ set(sources
   include/barobo/qlinkbot.hpp
 )
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-set_source_files_properties(${sources} PROPERTIES
-    COMPILE_FLAGS "-std=c++11")
 add_library(${target} ${sources} )
-set_target_properties(${target} PROPERTIES
-    COMPILE_FLAGS "-std=c++11")
-
 
 # requermintes (aka requirements, at the end of the day)
+
+add_dependency(cxx-util)
+add_dependency(libsfp)
+add_dependency(ribbon-bridge)
+add_dependency(ribbon-bridge-interfaces)
+add_dependency(serial)
+add_dependency(baromesh)
 
 find_package(Qt5Core)
 find_package(Qt5Widgets)
 find_package(Qt5Network)
 
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
+# This line needed for the automoc-generated file.
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 # properties
 
