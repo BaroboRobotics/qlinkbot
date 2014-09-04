@@ -122,7 +122,8 @@ int QLinkbot::enableButtonCallback()
     try {
         m->proxy.fire(MethodIn::enableButtonEvent{true}).get();
     }
-    catch (...) {
+    catch (std::exception& e) {
+        qDebug().nospace() << qPrintable(m->serialId) << ": " << e.what();
         return -1;
     }
     return 0;
@@ -182,7 +183,8 @@ int QLinkbot::setJointSpeeds (double s0, double s1, double s2) {
         f1.get();
         f2.get();
     }
-    catch (...) {
+    catch (std::exception& e) {
+        qDebug().nospace() << qPrintable(m->serialId) << ": " << e.what();
         return -1;
     }
     return 0;
@@ -198,7 +200,8 @@ int QLinkbot::disableButtonCallback () {
     try {
         m->proxy.fire(MethodIn::enableButtonEvent{false}).get();
     }
-    catch (...) {
+    catch (std::exception& e) {
+        qDebug().nospace() << qPrintable(m->serialId) << ": " << e.what();
         return -1;
     }
     return 0;
@@ -218,7 +221,8 @@ int QLinkbot::getJointAngles (double& a0, double& a1, double& a2, int) {
         a1 = radToDeg(values.values[1]);
         a2 = radToDeg(values.values[2]);
     }
-    catch (...) {
+    catch (std::exception& e) {
+        qDebug().nospace() << qPrintable(m->serialId) << ": " << e.what();
         return -1;
     }
     return 0;
@@ -232,7 +236,8 @@ int QLinkbot::moveNB (double a0, double a1, double a2) {
             true, { barobo_Robot_Goal_Type_RELATIVE, float(degToRad(a2)) }
         }).get();
     }
-    catch (...) {
+    catch (std::exception& e) {
+        qDebug().nospace() << qPrintable(m->serialId) << ": " << e.what();
         return -1;
     }
     return 0;
@@ -246,7 +251,19 @@ int QLinkbot::moveToNB (double a0, double a1, double a2) {
             true, { barobo_Robot_Goal_Type_ABSOLUTE, float(degToRad(a2)) }
         }).get();
     }
-    catch (...) {
+    catch (std::exception& e) {
+        qDebug().nospace() << qPrintable(m->serialId) << ": " << e.what();
+        return -1;
+    }
+    return 0;
+}
+
+int QLinkbot::stop () {
+    try {
+        m->proxy.fire(MethodIn::stop{}).get();
+    }
+    catch (std::exception& e) {
+        qDebug().nospace() << qPrintable(m->serialId) << ": " << e.what();
         return -1;
     }
     return 0;
@@ -258,7 +275,8 @@ int QLinkbot::setColorRGB (int r, int g, int b) {
             uint32_t(r << 16 | g << 8 | b)
         }).get();
     }
-    catch (...) {
+    catch (std::exception& e) {
+        qDebug().nospace() << qPrintable(m->serialId) << ": " << e.what();
         return -1;
     }
     return 0;
@@ -269,17 +287,13 @@ int QLinkbot::setJointEventThreshold (int, double) {
     qWarning() << "Unimplemented stub function in qlinkbot";
     return 0;
 }
-int QLinkbot::stop () {
-#warning Unimplemented stub function in qlinkbot
-    qWarning() << "Unimplemented stub function in qlinkbot";
-    return 0;
-}
 
 int QLinkbot::setBuzzerFrequencyOn (float freq) {
     try {
         m->proxy.fire(MethodIn::setBuzzerFrequency{freq}).get();
     }
-    catch (...) {
+    catch (std::exception& e) {
+        qDebug().nospace() << qPrintable(m->serialId) << ": " << e.what();
         return -1;
     }
     return 0;
@@ -294,7 +308,8 @@ int QLinkbot::getVersions (uint32_t& major, uint32_t& minor, uint32_t& patch) {
         qDebug().nospace() << qPrintable(m->serialId) << " Firmware version "
                            << major << '.' << minor << '.' << patch;
     }
-    catch (...) {
+    catch (std::exception& e) {
+        qDebug().nospace() << qPrintable(m->serialId) << ": " << e.what();
         return -1;
     }
     return 0;
