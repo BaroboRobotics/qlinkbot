@@ -84,6 +84,7 @@ QLinkbot::QLinkbot (QLinkbot&& other) {
 
 void QLinkbot::disconnectRobot()
 {
+    m->proxy.disconnect().get();
 }
 
 void QLinkbot::connectRobot()
