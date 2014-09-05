@@ -84,7 +84,12 @@ QLinkbot::QLinkbot (QLinkbot&& other) {
 
 void QLinkbot::disconnectRobot()
 {
-    m->proxy.disconnect().get();
+    try {
+        m->proxy.disconnect().get();
+    }
+    catch (std::exception& e) {
+        qDebug().nospace() << qPrintable(m->serialId) << ": " << e.what();
+    }
 }
 
 void QLinkbot::connectRobot()
