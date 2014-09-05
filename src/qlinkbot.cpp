@@ -58,12 +58,9 @@ QLinkbot::QLinkbot(const QString& id)
     QObject::connect(&m->worker, SIGNAL(accelChanged(double, double, double)),
         this, SLOT(newAccelValues(double, double, double)),
         Qt::QueuedConnection);
-    //QObject::connect(&m->worker, SIGNAL(buttonChanged(int, int)),
-    //    this, SLOT(newButtonValues(int, int)));
-    QObject::connect(&m->worker, SIGNAL(motorChanged(double, double, double, int)),
-        this, SLOT(newMotorValues(double, double, double, int)));
     QMetaObject::invokeMethod(&m->worker, "doWork", Qt::QueuedConnection);
     m->proxy.buttonEvent.connect(BIND_MEM_CB(&QLinkbot::newButtonValues, this));
+    m->proxy.encoderEvent.connect(BIND_MEM_CB(&QLinkbot::newMotorValues, this));
 }
 
 // Out-of-line destructor (even if empty) is needed for unique_ptr, see
@@ -137,8 +134,16 @@ int QLinkbot::enableButtonCallback()
 
 int QLinkbot::enableJointEventCallback()
 {
-#warning Unimplemented stub function in qlinkbot
-    qWarning() << "Unimplemented stub function in qlinkbot";
+    try {
+        m->proxy.fire(MethodIn::enableEncoderEvent {
+            true, { true, degToRad(float(20.0)) },
+            true, { true, degToRad(float(20.0)) },
+            true, { true, degToRad(float(20.0)) }
+        }).get();
+    }
+    catch (std::exception& e) {
+        qDebug().nospace() << qPrintable(m->serialId) << ": " << e.what();
+    }
 }
 
 QString QLinkbot::getSerialID() const {
@@ -214,8 +219,16 @@ int QLinkbot::disableButtonCallback () {
 }
 
 int QLinkbot::disableJointEventCallback () {
-#warning Unimplemented stub function in qlinkbot
-    qWarning() << "Unimplemented stub function in qlinkbot";
+    try {
+        m->proxy.fire(MethodIn::enableEncoderEvent {
+            true, { false, 0 },
+            true, { false, 0 },
+            true, { false, 0 }
+        }).get();
+    }
+    catch (std::exception& e) {
+        qDebug().nospace() << qPrintable(m->serialId) << ": " << e.what();
+    }
     return 0;
 }
 
