@@ -1,5 +1,4 @@
 #include "barobo/qlinkbot.hpp"
-#include "qlinkbotworker.hpp"
 
 #include <QMutex>
 #include <QWaitCondition>
@@ -36,39 +35,23 @@ inline QDebug operator<< (QDebug dbg, const rpc::VersionTriplet& triplet) {
 using MethodIn = rpc::MethodIn<barobo::Robot>;
 
 struct QLinkbot::Impl {
-    Impl (const QString& id, QLinkbot* parent)
+    Impl (const QString& id)
         : serialId(id)
-        , worker(parent)
         , proxy(id.toStdString()) { }
 
     QString serialId;
-    QMutex lock;
-    QWaitCondition cond;
-    QThread workerthread;
-    QLinkbotWorker worker;
     robot::Proxy proxy;
 };
 
 QLinkbot::QLinkbot(const QString& id)
-        : m(new QLinkbot::Impl(id, this))
-{
-    m->worker.moveToThread(&m->workerthread);
-    m->workerthread.start();
-    // TODO worker object should go away, wire these up from robot proxy
-    QObject::connect(&m->worker, SIGNAL(accelChanged(double, double, double)),
-        this, SLOT(newAccelValues(double, double, double)),
-        Qt::QueuedConnection);
-    QMetaObject::invokeMethod(&m->worker, "doWork", Qt::QueuedConnection);
+        : m(new QLinkbot::Impl(id)) {
     m->proxy.buttonEvent.connect(BIND_MEM_CB(&QLinkbot::newButtonValues, this));
     m->proxy.encoderEvent.connect(BIND_MEM_CB(&QLinkbot::newMotorValues, this));
 }
 
 // Out-of-line destructor (even if empty) is needed for unique_ptr, see
 // http://herbsutter.com/gotw/_100/
-QLinkbot::~QLinkbot () {
-    m->workerthread.quit();
-    m->workerthread.wait();
-}
+QLinkbot::~QLinkbot () { }
 
 void swap (QLinkbot& lhs, QLinkbot& rhs) {
     using std::swap;
@@ -148,16 +131,6 @@ int QLinkbot::enableJointEventCallback()
 
 QString QLinkbot::getSerialID() const {
     return m->serialId;
-}
-
-void QLinkbot::lock()
-{
-    m->lock.lock();
-}
-
-void QLinkbot::unlock()
-{
-    m->lock.unlock();
 }
 
 void QLinkbot::newAccelValues(double x, double y, double z)

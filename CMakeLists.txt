@@ -32,7 +32,6 @@ endfunction()
 
 set(sources
   src/qlinkbot.cpp
-  src/qlinkbotworker.cpp
   include/barobo/qlinkbot.hpp
 )
 

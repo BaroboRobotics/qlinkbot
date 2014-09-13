@@ -30,10 +30,6 @@ public:
     int enableJointEventCallback();
     QString getSerialID() const;
 
-    // hlh: are these used?
-    void lock();
-    void unlock();
-
     inline bool operator==(const QLinkbot& other) { 
       return this->getSerialID() == other.getSerialID();
     }
