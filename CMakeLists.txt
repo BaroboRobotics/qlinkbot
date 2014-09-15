@@ -9,34 +9,50 @@ if(TARGET ${target})
   return()
 endif()
 
-set(VERSION_MAJOR 0)
-set(VERSION_MINOR 1)
-set(VERSION_PATCH 1)
+set(VERSION_MAJOR 1)
+set(VERSION_MINOR 0)
+set(VERSION_PATCH 0)
 set(VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
 
 option(BUILD_SHARED_LIBS "build shared libraries" ON)
 
+if(NOT DEFINED DEPS_ROOT)
+    if(DEFINED ENV{DEPS_ROOT})
+        set(DEPS_ROOT "$ENV{DEPS_ROOT}")
+    else()
+        message(FATAL_ERROR "Please set DEPS_ROOT to the location of your dependencies (libsfp, ribbon-bridge, etc.).")
+    endif()
+endif()
+
+function(add_dependency _name)
+    add_subdirectory(${DEPS_ROOT}/${_name} ${_name})
+endfunction()
+
 # qlinkbot project has one library target
 
 set(sources
-  src/QLinkbot.cpp
-  include/QLinkbot.h
+  src/qlinkbot.cpp
+  include/barobo/qlinkbot.hpp
 )
 
 add_library(${target} ${sources} )
 
 # requermintes (aka requirements, at the end of the day)
 
-add_subdirectory(../libbarobo libbarobo)
+add_dependency(cxx-util)
+add_dependency(libsfp)
+add_dependency(ribbon-bridge)
+add_dependency(ribbon-bridge-interfaces)
+add_dependency(serial)
+add_dependency(baromesh)
 
 find_package(Qt5Core)
 find_package(Qt5Widgets)
+find_package(Qt5Network)
 
 
-
-
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
+# This line needed for the automoc-generated file.
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 # properties
 
@@ -51,13 +67,14 @@ if(APPLE)
   set_target_properties(${target} PROPERTIES
     INSTALL_NAME_DIR "@executable_path")
 endif()
-target_include_directories(${target} PUBLIC ${LIBBAROBO_INCLUDE_DIRS})
+target_include_directories(${target} PUBLIC include)
 
 # Linker requirements
 
 target_link_libraries(${target}
     Qt5::Core
-    barobo
+    Qt5::Network
+    baromesh
 )
 
 #
@@ -76,18 +93,6 @@ else()
 endif()
 
 install(TARGETS ${target}
-  #ARCHIVE DESTINATION ${INSTALL_LIB_DIR}
+  ARCHIVE DESTINATION ${INSTALL_LIB_DIR}
   LIBRARY DESTINATION ${INSTALL_LIB_DIR}
-  RUNTIME DESTINATION ${INSTALL_BINDIR})
-
-
-#
-# Configuration for dependent projects.
-#
-
-set(PUBLIC_INCLUDE_DIR include)
-include_directories(${PUBLIC_INCLUDE_DIR})
-
-get_filename_component(${PROJECT_NAME}_INCLUDE_DIRS ${PUBLIC_INCLUDE_DIR} ABSOLUTE CACHE)
-set(${PROJECT_NAME}_LIBRARIES ${target} CACHE INTERNAL "")
-set(${PROJECT_NAME}_VERSION ${VERSION} CACHE INTERNAL "")
+  RUNTIME DESTINATION ${INSTALL_BIN_DIR})
