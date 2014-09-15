@@ -5,6 +5,7 @@
 
 #include <QObject>
 
+#include <stdexcept>
 #include <memory>
 
 class QBAROBOSHARED_EXPORT QLinkbot : public QObject
@@ -29,14 +30,12 @@ public:
     int enableJointEventCallback();
     QString getSerialID() const;
 
-    void lock();
-    void unlock();
-
     inline bool operator==(const QLinkbot& other) { 
       return this->getSerialID() == other.getSerialID();
     }
     inline bool operator!=(const QLinkbot& other){return !operator==(other);}
 
+    // functions take angles in degrees
     int setJointSpeeds (double, double, double);
     int disableAccelEventCallback ();
     int disableButtonCallback ();
@@ -49,6 +48,13 @@ public:
     int stop ();
     int setBuzzerFrequencyOn (float);
     int getVersions (uint32_t&, uint32_t&, uint32_t&);
+
+    struct ConnectionRefused : std::runtime_error {
+        ConnectionRefused (std::string s) : std::runtime_error(s) { }
+    };
+    struct VersionMismatch : std::runtime_error {
+        VersionMismatch (std::string s) : std::runtime_error(s) { }
+    };
 
 signals:
     void buttonChanged(QLinkbot *linkbot, int button, int event);
