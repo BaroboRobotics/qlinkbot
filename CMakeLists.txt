@@ -16,6 +16,9 @@ set(VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
 
 option(BUILD_SHARED_LIBS "build shared libraries" ON)
 
+set(Boost_USE_STATIC_LIBS ON)
+find_package(Boost 1.54.0 REQUIRED COMPONENTS filesystem log thread)
+
 if(NOT DEFINED DEPS_ROOT)
     if(DEFINED ENV{DEPS_ROOT})
         set(DEPS_ROOT "$ENV{DEPS_ROOT}")
@@ -81,6 +84,7 @@ target_link_libraries(${target}
     Qt5::Core
     Qt5::Network
     baromesh
+    ${Boost_LIBRARIES}
 )
 
 #
