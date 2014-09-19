@@ -1,5 +1,5 @@
 project(QLINKBOT)
-cmake_minimum_required(VERSION 2.8.11)
+cmake_minimum_required(VERSION 2.8.12)
 
 set(target qlinkbot)
 if(TARGET ${target})
@@ -58,10 +58,17 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set_target_properties(${target} PROPERTIES
   VERSION ${VERSION}
   SOVERSION ${VERSION_MAJOR}
-  COMPILE_FLAGS "-DQBAROBO_LIBRARY"
+  DEFINE_SYMBOL QLINKBOT_LIBRARY
   COMPILE_FLAGS_DEBUG "-DDEBUG"
   AUTOMOC ON
 )
+
+# qlinkbot and its consumers must define QLINKBOT_DYN_LINK if qlinkbot's type is
+# SHARED_LIBRARY.
+target_compile_definitions(${target}
+  PUBLIC $<$<STREQUAL:$<TARGET_PROPERTY:${target},TYPE>,SHARED_LIBRARY>:QLINKBOT_DYN_LINK>
+  )
+
 if(APPLE)
   set_target_properties(${target} PROPERTIES
     INSTALL_NAME_DIR "@executable_path")

@@ -8,7 +8,7 @@
 #include <stdexcept>
 #include <memory>
 
-class QBAROBOSHARED_EXPORT QLinkbot : public QObject
+class QLINKBOT_API QLinkbot : public QObject
 {
     Q_OBJECT
 public:
