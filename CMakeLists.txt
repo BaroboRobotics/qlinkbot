@@ -43,7 +43,6 @@ add_dependency(cxx-util)
 add_dependency(libsfp)
 add_dependency(ribbon-bridge)
 add_dependency(ribbon-bridge-interfaces)
-add_dependency(serial)
 add_dependency(baromesh)
 
 find_package(Qt5Core)
