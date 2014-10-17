@@ -307,6 +307,22 @@ int QLinkbot::setColorRGB (int r, int g, int b) {
     return 0;
 }
 
+int QLinkbot::getColorRGB (int& r, int& g, int& b) {
+    BOOST_LOG_NAMED_SCOPE("QLinkbot::getColorRGB");
+    try {
+        auto color = m->proxy.fire(MethodIn::getLedColor{}).get();
+        r = 0xff & color.value >> 16;
+        g = 0xff & color.value >> 8;
+        b = 0xff & color.value;
+        BOOST_LOG(m->log) << "LED color is currently " << r << ' ' << g << ' ' << b;
+    }
+    catch (std::exception& e) {
+        qDebug().nospace() << qPrintable(m->serialId) << ": " << e.what();
+        return -1;
+    }
+    return 0;
+}
+
 int QLinkbot::setJointEventThreshold (int, double) {
     BOOST_LOG_NAMED_SCOPE("QLinkbot::setJointEventThreshold");
 #warning Unimplemented stub function in qlinkbot

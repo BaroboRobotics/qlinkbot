@@ -44,6 +44,7 @@ public:
     int moveNB (double, double, double);
     int moveToNB (double, double, double);
     int setColorRGB (int, int, int);
+    int getColorRGB (int&, int&, int&);
     int setJointEventThreshold (int, double);
     int stop ();
     int setBuzzerFrequencyOn (float);
