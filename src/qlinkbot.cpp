@@ -166,19 +166,10 @@ void QLinkbot::newButtonValues(int button, int buttonDown)
     emit buttonChanged(this, button, buttonDown);
 }
 
-void QLinkbot::newMotorValues(double j1, double j2, double j3, int mask)
+void QLinkbot::newMotorValues(int joint, double value)
 {
-    emit jointsChanged(this, j1, j2, j3, mask);
-    double angles[3];
-    angles[0] = j1;
-    angles[1] = j2;
-    angles[2] = j3;
-    int i;
-    for(i = 0; i < 3; i++) {
-        if(mask & (1<<i)) {
-            emit jointChanged(this, i+1, angles[i]);
-        }
-    }
+    emit jointsChanged(this, value, value, value, 1<<joint);
+    emit jointChanged(this, joint+1, value);
 }
 
 int QLinkbot::setJointSpeeds (double s0, double s1, double s2) {

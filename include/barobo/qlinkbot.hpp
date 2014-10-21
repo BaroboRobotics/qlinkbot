@@ -66,7 +66,7 @@ signals:
 public slots:
     void newAccelValues(double x, double y, double z);
     void newButtonValues(int button, int buttonDown);
-    void newMotorValues(double j1, double j2, double j3, int mask);
+    void newMotorValues(int joint, double value);
 
 private:
     struct Impl;
