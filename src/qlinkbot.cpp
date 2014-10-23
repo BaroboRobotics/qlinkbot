@@ -156,17 +156,17 @@ QString QLinkbot::getSerialID() const {
     return m->serialId;
 }
 
-void QLinkbot::newAccelValues(double x, double y, double z)
+void QLinkbot::newAccelValues(double x, double y, double z, int /*timestamp*/)
 {
     emit accelChanged(this, x, y, z);
 }
 
-void QLinkbot::newButtonValues(int button, int buttonDown)
+void QLinkbot::newButtonValues(int button, int buttonDown, int /*timestamp*/)
 {
     emit buttonChanged(this, button, buttonDown);
 }
 
-void QLinkbot::newMotorValues(int joint, double value)
+void QLinkbot::newMotorValues(int joint, double value, int /*timestamp*/)
 {
     emit jointsChanged(this, value, value, value, 1<<joint);
     emit jointChanged(this, joint+1, value);

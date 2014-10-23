@@ -64,9 +64,9 @@ signals:
     void accelChanged(QLinkbot *linkbot, double x, double y, double z);
 
 public slots:
-    void newAccelValues(double x, double y, double z);
-    void newButtonValues(int button, int buttonDown);
-    void newMotorValues(int joint, double value);
+    void newAccelValues(double x, double y, double z, int timestamp);
+    void newButtonValues(int button, int buttonDown, int timestamp);
+    void newMotorValues(int joint, double value, int timestamp);
 
 private:
     struct Impl;
